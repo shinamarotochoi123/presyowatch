@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 {% block title %}Admin Analytics — PresyoWatch{% endblock %}
 {% block content %}
+
 <h4 class="mb-3"><i class="fa-solid fa-chart-pie"></i> System Analytics</h4>
 
 <div class="row g-3 mb-4">
@@ -46,14 +47,79 @@
   </div>
 </div>
 
+<!-- ============= PENDING LGU / DTI APPROVALS ============= -->
+<div class="card p-3 shadow-sm mt-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h6 class="mb-0"><i class="fa-solid fa-user-clock"></i> Pending LGU / DTI-DA Approvals</h6>
+    <a href="{{ url_for('admin.users') }}" class="small">View all users &rarr;</a>
+  </div>
+
+  {% if pending_list %}
+    <div class="table-responsive">
+      <table class="table table-sm align-middle">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Organization</th>
+            <th>Division</th>
+            <th>City</th>
+            <th>Requested</th>
+            <th class="text-end">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for u in pending_list %}
+          <tr>
+            <td>{{ u.full_name or '—' }}</td>
+            <td class="small">{{ u.email or '—' }}</td>
+            <td class="small">{{ u.org_name or '—' }}</td>
+            <td class="small">{{ u.division or '—' }}</td>
+            <td class="small">{{ u.city or '—' }}</td>
+            <td class="small text-muted">
+              {{ u.created_at.strftime('%b %d, %Y') if u.created_at else '—' }}
+            </td>
+            <td class="text-end">
+              <form method="POST" action="{{ url_for('admin.approve_user', user_id=u.user_id) }}" class="d-inline">
+                <button class="btn btn-sm btn-success" type="submit">Approve</button>
+              </form>
+              <form method="POST" action="{{ url_for('admin.toggle_active', user_id=u.user_id) }}" class="d-inline" onsubmit="return confirm('Reject this account?')">
+                <button class="btn btn-sm btn-danger" type="submit">Reject</button>
+              </form>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <div class="text-muted text-center py-3">
+      No pending LGU / DTI-DA requests at the moment.
+    </div>
+  {% endif %}
+</div>
+
 <script>
 new Chart(document.getElementById('roleChart').getContext('2d'), {
   type: 'doughnut',
-  data: { labels: {{ role_labels|tojson }}, datasets: [{ data: {{ role_values|tojson }}, backgroundColor: ['#0f5132','#14804a','#ffc107','#6c757d','#20c997'] }] }
+  data: {
+    labels: {{ role_labels|tojson }},
+    datasets: [{
+      data: {{ role_values|tojson }},
+      backgroundColor: ['#0f5132', '#14804a', '#ffc107', '#6c757d', '#20c997']
+    }]
+  }
 });
 new Chart(document.getElementById('statusChart').getContext('2d'), {
   type: 'pie',
-  data: { labels: {{ status_labels|tojson }}, datasets: [{ data: {{ status_values|tojson }}, backgroundColor: ['#6c757d','#0f5132','#dc3545','#adb5bd'] }] }
+  data: {
+    labels: {{ status_labels|tojson }},
+    datasets: [{
+      data: {{ status_values|tojson }},
+      backgroundColor: ['#6c757d', '#0f5132', '#dc3545', '#adb5bd']
+    }]
+  }
 });
 </script>
+
 {% endblock %}
