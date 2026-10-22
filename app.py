@@ -4,7 +4,7 @@ from flask_login import current_user
 from config import Config
 from extensions import login_manager
 from models import User
-from utils.helpers import localtime, peso, timeago
+from utils.helpers import localtime, peso, split_full_name, timeago
 
 # (label, FontAwesome icon, endpoint, other endpoints that keep the tab highlighted)
 NAV = {
@@ -60,6 +60,7 @@ def create_app():
     app.jinja_env.filters["timeago"] = timeago
     app.jinja_env.filters["localtime"] = localtime
     app.jinja_env.filters["peso"] = peso
+    app.jinja_env.globals["split_full_name"] = split_full_name
 
     @app.context_processor
     def inject_globals():

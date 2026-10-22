@@ -2,13 +2,20 @@ from flask import Blueprint, render_template, redirect, url_for, request, flash
 from flask_login import login_user, logout_user, login_required, current_user
 
 from models import Market, User
-from utils.helpers import home_endpoint_for, log_action
+from utils.helpers import home_endpoint_for, log_action, read_name_fields
 
 bp = Blueprint("auth", __name__)
 
 # Self-registration may never grant "admin". Firestore has no ENUM constraint,
-# so the allowed values are enforced here.
+# so the allowed values are enforced here. "lgu" is only reachable through the
+# separate staff portal (/staff/register); it covers LGU and DTI/DA staff.
 REGISTER_ROLES = {"resident": "resident", "vendor": "vendor", "lgu": "lgu_staff"}
+# Each group signs in through its own login page.
+PORTALS = {
+    "public": {"roles": ("resident", "vendor"), "endpoint": "auth.login", "template": "login.html"},
+    "staff": {"roles": ("lgu_staff", "dti_da"), "endpoint": "auth.staff_login", "template": "staff_login.html"},
+    "admin": {"roles": ("admin",), "endpoint": "auth.admin_login", "template": "admin_login.html"},
+}
 CITIES = ("Cebu City", "Lapu-Lapu City")
 
 
@@ -33,15 +40,26 @@ def register_continue():
 
 @bp.route("/register/<role>", methods=["GET", "POST"])
 def register_form(role):
+    if role == "lgu":
+        return redirect(url_for("auth.staff_register"))
     if role not in REGISTER_ROLES:
         return redirect(url_for("auth.register"))
+    return _register(role)
+
+
+@bp.route("/staff/register", methods=["GET", "POST"])
+def staff_register():
+    return _register("lgu")
+
+
+def _register(role):
     if current_user.is_authenticated:
         return redirect(url_for(home_endpoint_for(current_user)))
 
     markets = sorted(Market.all(), key=lambda m: m.market_name)
 
     if request.method == "POST":
-        full_name = _clean("full_name")
+        names, name_error = read_name_fields()
         email = _clean("email").lower()
         password = request.form.get("password", "")
         confirm = request.form.get("confirm_password", "")
@@ -51,9 +69,12 @@ def register_form(role):
         business_name = _clean("business_name")
         business_address = _clean("business_address")
         org_name = _clean("org_name")
-        back = redirect(url_for("auth.register_form", role=role))
+        back = redirect(url_for("auth.staff_register") if role == "lgu" else url_for("auth.register_form", role=role))
 
-        if not full_name or not email or not password:
+        if name_error:
+            flash(name_error, "danger")
+            return back
+        if not email or not password:
             flash("Please fill out all required fields.", "danger")
             return back
         if password != confirm:
@@ -81,12 +102,15 @@ def register_form(role):
             flash("An account with that email already exists.", "danger")
             return back
 
-        # LGU staff accounts need admin approval before they can log in.
+        # LGU and DTI/DA staff share one sign-up form and need admin approval before they can log in.
         needs_approval = role == "lgu"
+        account_role = REGISTER_ROLES[role]
+        if needs_approval and request.form.get("agency") == "dti_da":
+            account_role = "dti_da"
         user = User(
-            full_name=full_name,
+            **names,
             email=email,
-            role=REGISTER_ROLES[role],
+            role=account_role,
             city=city,
             contact_number=contact_number,
             subscription_status="trial",
@@ -98,15 +122,16 @@ def register_form(role):
             vendor_status="pending" if role == "vendor" else "active",
             org_name=org_name or None,
             division=_clean("division") or None,
+            application_status="pending" if needs_approval else None,
         )
         user.set_password(password)
         user.save()
-        log_action(user, "register", f"New {REGISTER_ROLES[role]} account")
+        log_action(user, "register", f"New {account_role} account")
 
         if needs_approval:
-            flash("Account created. An administrator must approve LGU accounts before you can log in.", "info")
-        else:
-            flash("Account created successfully. You may now log in.", "success")
+            flash("Account created. An administrator must approve LGU / DTI-DA accounts before you can log in.", "info")
+            return redirect(url_for("auth.staff_login"))
+        flash("Account created successfully. You may now log in.", "success")
         return redirect(url_for("auth.login"))
 
     return render_template("register_form.html", role=role, markets=markets)
@@ -114,8 +139,24 @@ def register_form(role):
 
 @bp.route("/login", methods=["GET", "POST"])
 def login():
+    return _login("public")
+
+
+@bp.route("/staff/login", methods=["GET", "POST"])
+def staff_login():
+    return _login("staff")
+
+
+@bp.route("/admin/login", methods=["GET", "POST"])
+def admin_login():
+    return _login("admin")
+
+
+def _login(portal):
+    """Residents/vendors sign in at /login, LGU and DTI/DA staff at /staff/login, admins at /admin/login."""
     if current_user.is_authenticated:
         return redirect(url_for(home_endpoint_for(current_user)))
+    here = url_for(PORTALS[portal]["endpoint"], next=request.args.get("next") or None)
 
     if request.method == "POST":
         email = request.form.get("email", "").strip().lower()
@@ -125,26 +166,39 @@ def login():
         user = User.first(email=email)
         if not user or not user.check_password(password):
             flash("Invalid email or password.", "danger")
-            return redirect(url_for("auth.login"))
+            return redirect(here)
 
-        if user.role in ("resident", "vendor") and login_as != user.role:
+        if user.role not in PORTALS[portal]["roles"]:
+            right = next(k for k, v in PORTALS.items() if user.role in v["roles"])
+            flash({"public": "This is not a staff account. Please use the regular login.",
+                   "staff": "Government staff accounts sign in through the staff portal.",
+                   "admin": "Administrator accounts sign in through the admin login."}[right], "warning")
+            return redirect(url_for(PORTALS[right]["endpoint"]))
+
+        if portal == "public" and login_as != user.role:
             label = "Market Vendor" if user.role == "vendor" else "Resident/Consumer"
             flash(f"This is a {label} account. Please choose '{label}' under Login As.", "warning")
-            return redirect(url_for("auth.login"))
+            return redirect(here)
 
         if not user.is_active_flag:
             if user.role == "vendor" and user.vendor_status == "suspended":
                 flash("Your vendor account has been suspended. Please contact your LGU.", "danger")
+            elif user.application_status == "rejected":
+                flash("Your access request was not approved. Please contact the PresyoWatch administrator.", "danger")
             else:
                 flash("Your account is pending administrator approval.", "warning")
-            return redirect(url_for("auth.login"))
+            return redirect(here)
 
         login_user(user)
         log_action(user, "login")
         flash(f"Welcome back, {user.full_name}!", "success")
+        # Return to the page that required login (relative paths only, to avoid open redirects).
+        next_url = request.args.get("next", "")
+        if next_url.startswith("/") and not next_url.startswith("//"):
+            return redirect(next_url)
         return redirect(url_for(home_endpoint_for(user)))
 
-    return render_template("login.html")
+    return render_template(PORTALS[portal]["template"])
 
 
 @bp.route("/forgot-password")
@@ -190,10 +244,10 @@ def edit_account():
     user = current_user
 
     if request.method == "POST":
-        full_name = _clean("full_name")
+        names, name_error = read_name_fields()
         email = _clean("email").lower()
-        if not full_name or not email:
-            flash("Name and email are required.", "danger")
+        if name_error or not email:
+            flash(name_error or "Email is required.", "danger")
             return redirect(url_for("auth.edit_account"))
         other = User.first(email=email)
         if other and other.user_id != user.user_id:
@@ -205,7 +259,8 @@ def edit_account():
             flash("Invalid city selected.", "danger")
             return redirect(url_for("auth.edit_account"))
 
-        user.full_name = full_name
+        for field, value in names.items():
+            setattr(user, field, value)
         user.email = email
         user.contact_number = _clean("contact_number") or None
         user.address = _clean("address") or None

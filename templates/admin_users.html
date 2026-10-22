@@ -1,7 +1,36 @@
 {% extends "base.html" %}
+{% from "_ui.html" import name_fields %}
 {% block title %}Manage Users — PresyoWatch{% endblock %}
 {% block content %}
 <h4 class="mb-3"><i class="fa-solid fa-users-gear"></i> Manage Users</h4>
+
+<div class="card mb-4">
+  <div class="card-body">
+    <h6 class="mb-3"><i class="fa-solid fa-user-plus"></i> Add LGU / DTI-DA / Admin Account</h6>
+    <form method="POST" action="{{ url_for('admin.create_user') }}" class="row g-2">
+      {{ name_fields(input_class='form-control', wrap_class='col-md-3') }}
+      <div class="col-md-3"><input type="email" name="email" class="form-control" placeholder="Email" required></div>
+      <div class="col-md-2">
+        <select name="role" class="form-select" required>
+          <option value="lgu_staff">LGU Staff</option>
+          <option value="dti_da">DTI / DA</option>
+          <option value="admin">Admin</option>
+        </select>
+      </div>
+      <div class="col-md-2">
+        <select name="city" class="form-select">
+          <option value="">City (optional)</option>
+          <option>Cebu City</option>
+          <option>Lapu-Lapu City</option>
+        </select>
+      </div>
+      <div class="col-md-2"><input name="org_name" class="form-control" placeholder="Office / Agency"></div>
+      <div class="col-md-3"><input name="division" class="form-control" placeholder="Division (optional)"></div>
+      <div class="col-md-3"><button class="btn btn-success w-100">Create Account</button></div>
+    </form>
+    <div class="small text-muted mt-2">A temporary password is shown after creation. The account is active right away.</div>
+  </div>
+</div>
 
 <div class="table-responsive">
 <table class="table table-hover bg-white align-middle">
@@ -13,9 +42,22 @@
     <tr>
       <td>{{ u.full_name }}</td>
       <td>{{ u.email }}</td>
-      <td>{{ u.role.replace('_',' ')|title }}</td>
+      <td>
+        {% if u.user_id == current_user.user_id %}
+          {{ u.role.replace('_',' ')|title }}
+        {% else %}
+        <form method="POST" action="{{ url_for('admin.change_role', user_id=u.user_id) }}" class="d-flex gap-1">
+          <select name="role" class="form-select form-select-sm" style="min-width:110px">
+            {% for r, label in [('resident','Resident'),('vendor','Vendor'),('lgu_staff','LGU Staff'),('dti_da','DTI / DA'),('admin','Admin')] %}
+            <option value="{{ r }}" {{ 'selected' if u.role == r }}>{{ label }}</option>
+            {% endfor %}
+          </select>
+          <button class="btn btn-sm btn-outline-primary">Set</button>
+        </form>
+        {% endif %}
+      </td>
       <td>{{ u.city or '-' }}</td>
-      <td>{% if u.is_active_flag %}<span class="badge badge-verified">Active</span>{% else %}<span class="badge bg-secondary">Pending/Disabled</span>{% endif %}</td>
+      <td>{% if u.is_active_flag %}<span class="badge badge-verified">Active</span>{% elif u.application_status == 'rejected' %}<span class="badge bg-danger">Rejected</span>{% else %}<span class="badge bg-secondary">Pending/Disabled</span>{% endif %}</td>
       <td>
         {% if u.role == 'vendor' %}
           {% if u.is_verified_vendor %}<span class="badge bg-success">Verified Vendor</span>

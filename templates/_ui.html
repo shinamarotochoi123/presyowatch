@@ -35,3 +35,19 @@
   </label>
 </div>
 {% endmacro %}
+
+{# First / middle / last name inputs. Ticking N/A disables the middle name field. #}
+{% macro name_fields(user=none, input_class='input-pw', wrap_class='field', owner=false) %}
+{% set first, middle, last = split_full_name(user) %}
+{% set na = user is not none and user.middle_name == 'N/A' %}
+<div class="{{ wrap_class }}"><input class="{{ input_class }}" name="first_name" value="{{ first }}" placeholder="{{ 'Owner ' if owner }}First Name" required></div>
+<div class="{{ wrap_class }}">
+  <input class="{{ input_class }}" name="middle_name" value="{{ '' if na else middle }}" placeholder="Middle Name" {{ 'disabled' if na else 'required' }}>
+  <label class="small text-muted d-flex align-items-center gap-1 mt-1" style="cursor:pointer">
+    <input type="checkbox" name="middle_na" value="1" {{ 'checked' if na }}
+           onchange="var m=this.form.elements['middle_name'];m.disabled=this.checked;m.required=!this.checked;if(this.checked)m.value='';">
+    N/A (no middle name)
+  </label>
+</div>
+<div class="{{ wrap_class }}"><input class="{{ input_class }}" name="last_name" value="{{ last }}" placeholder="Last Name" required></div>
+{% endmacro %}

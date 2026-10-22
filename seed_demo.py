@@ -7,6 +7,7 @@ Demo logins (password for all: demo1234):
     resident:  shin@presyowatch.demo   (log in as "Resident/Consumer")
     vendor:    kenje@presyowatch.demo  (log in as "Market Vendor")
     LGU staff: liza@presyowatch.demo
+    DTI / DA:  dti@presyowatch.demo
 """
 import random
 from datetime import date, datetime, timedelta
@@ -15,6 +16,20 @@ from models import Listing, Market, PriceAlertRule, PriceReport, Product, Review
 from utils.spike_detection import create_report
 
 PASSWORD = "demo1234"
+
+
+def make_user(**kw):
+    user = User(**kw)
+    user.set_password(PASSWORD)
+    return user.save()
+
+
+# Created separately so it is added even when the rest of the demo data already exists.
+if not User.first(email="dti@presyowatch.demo"):
+    make_user(full_name="Maria Santos", email="dti@presyowatch.demo", role="dti_da", city="Cebu City",
+              org_name="DTI Region VII", division="Consumer Protection Division",
+              contact_number="+63 32 255 5678", subscription_status="active")
+    print("DTI/DA demo account created: dti@presyowatch.demo / demo1234")
 
 if User.first(email="shin@presyowatch.demo"):
     print("Demo data already exists.")
@@ -26,12 +41,6 @@ if not markets or not products:
     raise SystemExit("Run seed_data.py first.")
 carbon = markets["Carbon Market"]
 lapu = markets["Lapu-Lapu City Public Market"]
-
-
-def make_user(**kw):
-    user = User(**kw)
-    user.set_password(PASSWORD)
-    return user.save()
 
 
 resident = make_user(full_name="Shin Amaroto", email="shin@presyowatch.demo", city="Cebu City",

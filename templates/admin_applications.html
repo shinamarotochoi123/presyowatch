@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block title %}Staff Applications — PresyoWatch{% endblock %}
+{% block content %}
+<h4 class="mb-1"><i class="fa-solid fa-user-check"></i> LGU / DTI-DA Staff Applications</h4>
+<div class="text-muted small mb-3">People who requested access at the staff portal. Confirm they are real government staff before approving.</div>
+
+<h6 class="mt-3">Pending <span class="badge bg-warning text-dark">{{ pending|length }}</span></h6>
+{% if pending %}
+<div class="table-responsive">
+<table class="table table-hover bg-white align-middle">
+  <thead class="table-light">
+    <tr><th>Applied</th><th>Name</th><th>Email</th><th>Type</th><th>Organization</th><th>Division</th><th>City</th><th>Contact</th><th>Decision</th></tr>
+  </thead>
+  <tbody>
+    {% for u in pending %}
+    <tr>
+      <td class="small">{{ u.created_at|localtime if u.created_at else '-' }}</td>
+      <td>{{ u.full_name }}</td>
+      <td>{{ u.email }}</td>
+      <td>{{ 'DTI / DA' if u.role == 'dti_da' else 'LGU Staff' }}</td>
+      <td>{{ u.org_name or '-' }}</td>
+      <td>{{ u.division or '-' }}</td>
+      <td>{{ u.city or '-' }}</td>
+      <td>{{ u.contact_number or '-' }}</td>
+      <td class="text-nowrap">
+        <form method="POST" action="{{ url_for('admin.approve_user', user_id=u.user_id) }}" class="d-inline">
+          <input type="hidden" name="back" value="applications">
+          <button class="btn btn-sm btn-success"><i class="fa-solid fa-check"></i> Approve</button>
+        </form>
+        <form method="POST" action="{{ url_for('admin.reject_user', user_id=u.user_id) }}" class="d-inline" onsubmit="return confirm('Reject the application from {{ u.full_name }}?')">
+          <button class="btn btn-sm btn-outline-danger"><i class="fa-solid fa-xmark"></i> Reject</button>
+        </form>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+</div>
+{% else %}
+<div class="alert alert-light border">No pending applications.</div>
+{% endif %}
+
+<h6 class="mt-4">Rejected <span class="badge bg-secondary">{{ rejected|length }}</span></h6>
+{% if rejected %}
+<div class="table-responsive">
+<table class="table bg-white align-middle">
+  <thead class="table-light">
+    <tr><th>Name</th><th>Email</th><th>Type</th><th>Organization</th><th></th></tr>
+  </thead>
+  <tbody>
+    {% for u in rejected %}
+    <tr>
+      <td>{{ u.full_name }}</td>
+      <td>{{ u.email }}</td>
+      <td>{{ 'DTI / DA' if u.role == 'dti_da' else 'LGU Staff' }}</td>
+      <td>{{ u.org_name or '-' }}</td>
+      <td>
+        <form method="POST" action="{{ url_for('admin.approve_user', user_id=u.user_id) }}" class="d-inline">
+          <input type="hidden" name="back" value="applications">
+          <button class="btn btn-sm btn-outline-success">Approve instead</button>
+        </form>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+</div>
+{% else %}
+<div class="text-muted small">None.</div>
+{% endif %}
+{% endblock %}

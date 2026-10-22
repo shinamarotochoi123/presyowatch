@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% from "_ui.html" import brand %}
+{% from "_ui.html" import brand, name_fields %}
 {% set hide_nav = true %}
 {% block title %}Your Details — PresyoWatch{% endblock %}
 {% block content %}
@@ -12,7 +12,7 @@
     {{ {'resident': 'a resident', 'vendor': 'vendor', 'lgu': 'LGU / DTI-DA staff'}[role] }}
   </div>
 
-  <div class="field"><input class="input-pw" name="full_name" placeholder="{{ 'Owner Full Name' if role == 'vendor' else 'Full Name' }}" required></div>
+  {{ name_fields(owner=(role == 'vendor')) }}
   <div class="field"><input class="input-pw" type="email" name="email" placeholder="Email Address" required></div>
   <div class="field"><input class="input-pw" type="password" name="password" placeholder="Password (min. 6 characters)" required minlength="6"></div>
   <div class="field"><input class="input-pw" type="password" name="confirm_password" placeholder="Confirm Password" required></div>
@@ -33,12 +33,18 @@
     </label>
     <button class="btn-pw btn-block" type="submit">Register as Vendor</button>
   {% elif role == 'lgu' %}
-    <div class="field"><input class="input-pw" name="org_name" placeholder="Organization (e.g. Municipality of Cebu City)" required></div>
+    <div class="field">
+      <select class="input-pw" name="agency" required>
+        <option value="lgu_staff">LGU Staff</option>
+        <option value="dti_da">DTI / DA Staff</option>
+      </select>
+    </div>
+    <div class="field"><input class="input-pw" name="org_name" placeholder="Organization (e.g. Municipality of Cebu City / DTI Region VII)" required></div>
     <div class="field"><input class="input-pw" name="division" placeholder="Division (e.g. Price Monitoring Division)"></div>
     <div class="field">
       <select class="input-pw" name="city"><option value="">City</option><option>Cebu City</option><option>Lapu-Lapu City</option></select>
     </div>
-    <div class="small text-muted mb-3">LGU accounts must be approved by an administrator before you can log in.</div>
+    <div class="small text-muted mb-3">LGU / DTI-DA accounts must be approved by an administrator before you can log in.</div>
     <button class="btn-pw btn-block" type="submit">Request Access</button>
   {% else %}
     <div class="field"><input class="input-pw" name="address" placeholder="Location (e.g. Lahug)"></div>
@@ -48,5 +54,9 @@
     <button class="btn-pw btn-block" type="submit">Register as Resident</button>
   {% endif %}
 </form>
+{% if role == 'lgu' %}
+<div class="text-center small">Already approved? <a href="{{ url_for('auth.staff_login') }}" class="fw-bold text-dark ms-1">Staff Login</a></div>
+{% else %}
 <div class="text-center small"><a href="{{ url_for('auth.register') }}" class="text-dark">&larr; Change role</a></div>
+{% endif %}
 {% endblock %}

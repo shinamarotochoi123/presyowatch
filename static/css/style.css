@@ -253,7 +253,7 @@ textarea.input-pw { border-radius: 16px; min-height: 70px; resize: vertical; }
 
 .hero { text-align: center; padding: 20px 24px 10px; }
 .hero h1 { font-size: 2.1rem; color: #24391f; }
-.top-bar { display: flex; align-items: center; justify-content: space-between; padding: 12px 18px; background: rgba(255, 255, 255, .5); }
+.top-bar { display: flex; align-items: center; justify-content: space-between; padding: 14px 18px; background: transparent; }
 .top-bar .brand-mini { display: flex; align-items: center; gap: 8px; font-weight: 700; color: #0f6b33; text-decoration: none; }
 .top-bar img { width: 34px; height: 34px; }
 .pill-note { display: inline-block; border: 1px solid #4a7a4f; border-radius: 999px; padding: 3px 14px; font-size: .75rem; color: #3a5a3a; background: rgba(255, 255, 255, .4); }

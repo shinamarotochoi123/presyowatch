@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% from "_ui.html" import brand %}
+{% set hide_nav = true %}
+{% block title %}Admin Login — PresyoWatch{% endblock %}
+{% block content %}
+<h1 class="auth-title"><i class="fa-solid fa-user-shield"></i> Admin</h1>
+<div class="auth-sub">PresyoWatch administrators only</div>
+
+<form method="POST" class="pw-card white">
+  {{ brand() }}
+  <div class="field"><input class="input-pw" type="email" name="email" placeholder="Admin email" required autocomplete="email"></div>
+  <div class="field"><input class="input-pw" type="password" name="password" placeholder="Password" required autocomplete="current-password"></div>
+  <button class="btn-pw btn-block" type="submit">Login as Admin</button>
+</form>
+{% endblock %}

@@ -3,7 +3,7 @@ from collections import defaultdict
 from datetime import date, datetime, timedelta
 from functools import wraps
 
-from flask import abort
+from flask import abort, request
 from flask_login import current_user, login_required
 
 from config import Config
@@ -13,6 +13,44 @@ from models import (
 )
 
 PHT_OFFSET = timedelta(hours=8)  # Philippine Standard Time
+
+
+# ---- names --------------------------------------------------------------
+NO_MIDDLE_NAME = "N/A"
+
+
+def read_name_fields():
+    """Read first/middle/last name from the submitted form.
+
+    Returns (fields, error). fields has first_name, middle_name, last_name and the
+    combined full_name; middle_name is "N/A" when the "No middle name" box is ticked.
+    """
+    first = request.form.get("first_name", "").strip()
+    last = request.form.get("last_name", "").strip()
+    middle = request.form.get("middle_name", "").strip()
+    if request.form.get("middle_na"):
+        middle = NO_MIDDLE_NAME
+    if not first or not last:
+        return None, "First name and last name are required."
+    if not middle:
+        return None, "Enter your middle name, or tick N/A if you have none."
+    parts = [first] + ([middle] if middle != NO_MIDDLE_NAME else []) + [last]
+    return {"first_name": first, "middle_name": middle, "last_name": last,
+            "full_name": " ".join(parts)}, None
+
+
+def split_full_name(user):
+    """Best-effort first/middle/last for accounts created before names were split."""
+    if user is None:
+        return "", "", ""
+    if user.first_name:
+        return user.first_name, user.middle_name or "", user.last_name or ""
+    words = (user.full_name or "").split()
+    if len(words) < 2:
+        return " ".join(words), "", ""
+    if len(words) == 2:
+        return words[0], "", words[1]
+    return " ".join(words[:-2]), words[-2], words[-1]
 
 
 # ---- auth ---------------------------------------------------------------
