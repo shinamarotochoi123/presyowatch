@@ -47,13 +47,21 @@
 </div>
 
 <script>
-new Chart(document.getElementById('roleChart').getContext('2d'), {
-  type: 'doughnut',
-  data: { labels: {{ role_labels|tojson }}, datasets: [{ data: {{ role_values|tojson }}, backgroundColor: ['#0f5132','#14804a','#ffc107','#6c757d','#20c997'] }] }
-});
-new Chart(document.getElementById('statusChart').getContext('2d'), {
-  type: 'pie',
-  data: { labels: {{ status_labels|tojson }}, datasets: [{ data: {{ status_values|tojson }}, backgroundColor: ['#6c757d','#0f5132','#dc3545','#adb5bd'] }] }
+// Chart.js is loaded at the end of base.html, so wait for the page before drawing.
+document.addEventListener('DOMContentLoaded', function () {
+  const opts = {
+    cutout: '62%',
+    plugins: { legend: { position: 'bottom', labels: { usePointStyle: true, boxWidth: 8, padding: 16, font: { family: 'Figtree' } } } },
+  };
+  const ring = { borderColor: '#fff', borderWidth: 3, hoverOffset: 6 };
+  new Chart(document.getElementById('roleChart'), {
+    type: 'doughnut', options: opts,
+    data: { labels: {{ role_labels|tojson }}, datasets: [{ ...ring, data: {{ role_values|tojson }}, backgroundColor: ['#1f7a45','#5bb07a','#e8a317','#4d7fae','#13321f'] }] }
+  });
+  new Chart(document.getElementById('statusChart'), {
+    type: 'doughnut', options: opts,
+    data: { labels: {{ status_labels|tojson }}, datasets: [{ ...ring, data: {{ status_values|tojson }}, backgroundColor: ['#e8a317','#1f7a45','#d64541','#9aa393'] }] }
+  });
 });
 </script>
 {% endblock %}

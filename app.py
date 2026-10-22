@@ -71,7 +71,13 @@ def create_app():
             {"label": label, "icon": icon, "endpoint": ep, "active": request.endpoint in (ep, *extra)}
             for label, icon, ep, extra in NAV.get(group, [])
         ]
-        return {"nav_current_user": current_user, "nav_items": items}
+        pending_applications = 0
+        if group == "admin":
+            from routes.admin import _is_pending_application
+            pending_applications = sum(
+                1 for u in User.find(("role", "in", ["lgu_staff", "dti_da"])) if _is_pending_application(u)
+            )
+        return {"nav_current_user": current_user, "nav_items": items, "pending_applications": pending_applications}
 
     return app
 

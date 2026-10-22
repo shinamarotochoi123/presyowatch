@@ -1,18 +1,20 @@
 {% extends "base.html" %}
-{% from "_ui.html" import brand %}
+{% from "_ui.html" import brand, fl %}
 {% set hide_nav = true %}
 {% block title %}Staff Login — PresyoWatch{% endblock %}
 {% block content %}
-<h1 class="auth-title">Staff Portal</h1>
-<div class="auth-sub">For LGU and DTI / DA staff</div>
+<div class="auth-head">
+  <div class="auth-badge"><i class="fa-solid fa-landmark"></i> Staff portal</div>
+  <h1 class="auth-title">LGU &amp; DTI / DA login</h1>
+  <div class="auth-sub">For approved government personnel</div>
+</div>
 
-<form method="POST" class="pw-card white">
-  {{ brand() }}
-  <div class="field"><input class="input-pw" type="email" name="email" placeholder="Work email address" required autocomplete="email"></div>
-  <div class="field"><input class="input-pw" type="password" name="password" placeholder="Password" required autocomplete="current-password"></div>
-  <div class="text-end small mb-3"><a href="{{ url_for('auth.forgot_password') }}" class="text-muted">Forgot Password?</a></div>
-
-  <button class="btn-pw btn-block" type="submit">Login to Staff Portal</button>
+<form method="POST" class="pw-card white auth-card" data-modern-form>
+  {{ brand(56) }}
+  {{ fl('email', 'Work email', 'envelope', type='email', required=true, autocomplete='email') }}
+  {{ fl('password', 'Password', 'lock', type='password', required=true, autocomplete='current-password') }}
+  <div class="text-end small mb-3"><a href="{{ url_for('auth.forgot_password') }}" class="link-muted">Forgot password?</a></div>
+  <button class="btn-pw btn-block btn-submit" type="submit"><span>Log in to staff portal</span></button>
 </form>
-<div class="text-center small text-dark">No staff account yet? <a href="{{ url_for('auth.staff_register') }}" class="fw-bold text-dark ms-1">Request Access</a></div>
+<div class="auth-foot">No staff account yet? <a href="{{ url_for('auth.staff_register') }}">Request access</a></div>
 {% endblock %}

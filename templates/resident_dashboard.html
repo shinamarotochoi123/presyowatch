@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from "_ui.html" import stat %}
 {% block title %}Dashboard — PresyoWatch{% endblock %}
 {% block content %}
 
@@ -31,36 +32,26 @@
 </style>
 
 <!-- Welcome Card -->
-<div class="pw-card mt-3">
-  <div class="small text-muted">Good day,</div>
-  <h4 class="mb-0" style="color:#2E7D32;">{{ current_user.full_name or 'Resident' }}</h4>
-  <div class="small text-muted mb-3">
-    {{ current_user.city or 'Lapu-Lapu City' }}{% if current_user.address %} · {{ current_user.address }}{% endif %}
-  </div>
-
-  <div class="d-flex gap-2">
-    <div class="pw-card tint text-center flex-fill mb-0" style="padding:12px;">
-      <div style="font-size:1.3rem;font-weight:600;">{{ report_count or 0 }}</div>
-      <div class="small text-muted">Reports</div>
-    </div>
-    <div class="pw-card tint text-center flex-fill mb-0" style="padding:12px;">
-      <div style="font-size:1.3rem;font-weight:600;">{{ alert_count or 0 }}</div>
-      <div class="small text-muted">Alerts</div>
-    </div>
-    <div class="pw-card tint text-center flex-fill mb-0" style="padding:12px;">
-      <div style="font-size:1.3rem;font-weight:600;">{{ changes or 0 }}</div>
-      <div class="small text-muted">Changes</div>
-    </div>
+<div class="pw-card hero-card mt-2">
+  <div class="eyebrow">Magandang araw,</div>
+  <h4>{{ current_user.first_name or current_user.full_name or 'Resident' }} 👋</h4>
+  <div class="sub"><i class="fa-solid fa-location-dot"></i>
+    {{ current_user.city or 'Lapu-Lapu City' }}{% if current_user.address %} · {{ current_user.address }}{% endif %}</div>
+  <div class="stat-row c3">
+    {{ stat(report_count or 0, 'Reports') }}
+    {{ stat(alert_count or 0, 'Alerts') }}
+    {{ stat(changes or 0, 'Changes') }}
   </div>
 </div>
 
 <!-- QR Scan Banner -->
-<a href="{{ url_for('resident.scan_qr') }}" class="pw-card d-flex align-items-center gap-3 mb-3" style="text-decoration:none;color:inherit;">
-  <i class="fa-solid fa-qrcode" style="font-size:2rem;color:#2E7D32;"></i>
+<a href="{{ url_for('resident.scan_qr') }}" class="pw-card action-card">
+  <span class="action-icon"><i class="fa-solid fa-qrcode"></i></span>
   <div>
-    <div class="fw-semibold" style="color:#2E7D32;">Scan QR to track prices</div>
-    <div class="small text-muted fst-italic">Tap to scan any market QR code</div>
+    <div class="action-title">Scan QR to track prices</div>
+    <div class="action-sub">Point your camera at any market QR code</div>
   </div>
+  <i class="fa-solid fa-chevron-right action-go"></i>
 </a>
 
 <!-- Today's Market Prices -->

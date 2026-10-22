@@ -3,7 +3,7 @@
 {% block content %}
 <h4 class="page-title">Subscription</h4>
 
-<div class="pw-card dark" style="border:1.5px solid #222;background:#8fb281">
+<div class="pw-card dark">
   <div class="d-flex justify-content-between"><small>Current Plan</small>
     <span class="pill" style="border-color:#222">{{ 'Active' if sub.status == 'active' else 'Cancelled' }}</span></div>
   <h2 class="fw-bold mb-0" style="color:#fff">{{ plan.name }}</h2>

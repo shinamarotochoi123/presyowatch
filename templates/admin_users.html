@@ -8,7 +8,7 @@
   <div class="card-body">
     <h6 class="mb-3"><i class="fa-solid fa-user-plus"></i> Add LGU / DTI-DA / Admin Account</h6>
     <form method="POST" action="{{ url_for('admin.create_user') }}" class="row g-2">
-      {{ name_fields(input_class='form-control', wrap_class='col-md-3') }}
+      {{ name_fields(compact=true) }}
       <div class="col-md-3"><input type="email" name="email" class="form-control" placeholder="Email" required></div>
       <div class="col-md-2">
         <select name="role" class="form-select" required>
