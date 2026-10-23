@@ -1,68 +1,61 @@
 {% extends "base.html" %}
-{% from "_ui.html" import brand, name_fields, fl, fl_select, segmented, section %}
+{% from "_ui.html" import brand %}
 {% set hide_nav = true %}
-{% set cities = [('Cebu City', 'Cebu City'), ('Lapu-Lapu City', 'Lapu-Lapu City')] %}
-{% block title %}{{ 'Request Staff Access' if role == 'lgu' else 'Your Details' }} — PresyoWatch{% endblock %}
+{% block title %}Your Details — PresyoWatch{% endblock %}
 {% block content %}
+
 <div class="auth-head">
-  {% if role != 'lgu' %}<div class="steps" aria-label="Step 2 of 2"><span class="done"></span><span class="on"></span></div>{% endif %}
-  <h1 class="auth-title">{{ 'Request staff access' if role == 'lgu' else 'Create your account' }}</h1>
-  <div class="auth-sub">
-    {{ {'resident': 'Signing up as a Resident / Consumer',
-        'vendor': 'Signing up as a Market Vendor',
-        'lgu': 'For LGU and DTI / DA personnel'}[role] }}
-  </div>
+  <div class="steps" aria-label="Step 2 of 2"><span class="on"></span><span class="on"></span></div>
+  <h1 class="auth-title">Your details</h1>
+  <div class="auth-sub">Step 2: Fill in your information</div>
 </div>
 
-<form method="POST" class="pw-card white auth-card" data-modern-form>
+<form method="POST" class="pw-card white auth-card">
   {{ brand(56) }}
+  
+  <input type="hidden" name="role" value="{{ request.args.get('role', 'resident') }}">
 
-  {{ section(1, 'Personal details') }}
-  {{ name_fields(owner=(role == 'vendor')) }}
-  {{ fl('contact_number', 'Contact number', 'phone', type='tel', autocomplete='tel') }}
+  <div class="field mt-3">
+    <input class="input-pw" name="first_name" placeholder="First Name" required>
+  </div>
+  <div class="field">
+    <input class="input-pw" name="last_name" placeholder="Last Name" required>
+  </div>
+  <div class="field">
+    <input class="input-pw" type="email" name="email" placeholder="Email Address" required>
+  </div>
+  <div class="field">
+    <input class="input-pw" type="password" name="password" placeholder="Password (min. 6 characters)" required minlength="6">
+  </div>
+  <div class="field">
+    <input class="input-pw" type="password" name="confirm_password" placeholder="Confirm Password" required minlength="6">
+  </div>
+  <div class="field">
+    <input class="input-pw" name="contact_number" placeholder="Contact Number">
+  </div>
+  <div class="field">
+    <select class="input-pw" name="city">
+      <option value="Cebu City">Cebu City</option>
+      <option value="Lapu-Lapu City">Lapu-Lapu City</option>
+    </select>
+  </div>
 
-  {{ section(2, 'Account') }}
-  {{ fl('email', 'Work email' if role == 'lgu' else 'Email address', 'envelope', type='email', required=true, autocomplete='email') }}
-  {{ fl('password', 'Password', 'lock', type='password', required=true, autocomplete='new-password', attrs='minlength="6" data-strength') }}
-  <div class="pw-meter" data-meter hidden><span></span><span></span><span></span><span></span><em></em></div>
-  {{ fl('confirm_password', 'Confirm password', 'lock', type='password', required=true, autocomplete='new-password', attrs='data-confirm') }}
-
-  {% if role == 'vendor' %}
-    {{ section(3, 'Business') }}
-    {{ fl('business_name', 'Business name', 'store', required=true, autocomplete='organization') }}
-    {{ fl('business_address', 'Stall / business address', 'location-dot') }}
-    {% set market_opts = [] %}
-    {% for m in markets %}{% set _ = market_opts.append((m.market_id, m.market_name ~ ' — ' ~ m.city)) %}{% endfor %}
-    {{ fl_select('market_id', 'Market location', 'shop', market_opts, required=true) }}
-    <label class="check-line">
-      <input type="checkbox" name="agree" required>
-      <span>I agree to the Terms and Conditions and Privacy Policy</span>
-    </label>
-    <button class="btn-pw btn-block btn-submit" type="submit"><span>Create vendor account</span></button>
-
-  {% elif role == 'lgu' %}
-    {{ section(3, 'Organization') }}
-    <div class="field-label">I work for</div>
-    {{ segmented('agency', [('lgu_staff', 'LGU', 'landmark'), ('dti_da', 'DTI / DA', 'scale-balanced')], 'lgu_staff') }}
-    {{ fl('org_name', 'Organization / office', 'building-columns', required=true, autocomplete='organization') }}
-    {{ fl('division', 'Division', 'sitemap') }}
-    {{ fl_select('city', 'City', 'city', cities) }}
-    <div class="note-box"><i class="fa-solid fa-shield-halved"></i>
-      <span>An administrator reviews every staff request. You can log in once you are approved.</span></div>
-    <button class="btn-pw btn-block btn-submit" type="submit"><span>Request access</span></button>
-
-  {% else %}
-    {{ section(3, 'Location') }}
-    {{ fl('address', 'Barangay / area (e.g. Lahug)', 'location-dot') }}
-    {{ fl_select('city', 'City', 'city', cities) }}
-    <button class="btn-pw btn-block btn-submit" type="submit"><span>Create account</span></button>
+  {% if request.args.get('role') == 'vendor' %}
+  <div class="field">
+    <input class="input-pw" name="business_name" placeholder="Business Name" required>
+  </div>
+  <div class="field">
+    <input class="input-pw" name="business_address" placeholder="Business Address (e.g. Carbon Market)" required>
+  </div>
   {% endif %}
+
+  <button class="btn-pw btn-block btn-submit mt-3" type="submit">
+    <span>Create Account <i class="fa-solid fa-check"></i></span>
+  </button>
 </form>
 
-{% if role == 'lgu' %}
-<div class="auth-foot">Already approved? <a href="{{ url_for('auth.staff_login') }}">Staff login</a></div>
-{% else %}
-<div class="auth-foot"><a href="{{ url_for('auth.register') }}"><i class="fa-solid fa-arrow-left"></i> Change role</a>
-  <span class="mx-2">·</span> Have an account? <a href="{{ url_for('auth.login') }}">Log in</a></div>
-{% endif %}
+<div class="auth-foot">
+  <a href="{{ url_for('auth.register') }}">← Back to role selection</a>
+</div>
+
 {% endblock %}
