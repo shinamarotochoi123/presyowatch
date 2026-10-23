@@ -127,8 +127,13 @@ def _register(role):
         flash("Account created successfully. You may now log in.", "success")
         return redirect(url_for("auth.login"))
 
-    template = "register_lgu.html" if role == "lgu" else "register.html"
-    return render_template(template, markets=markets, role=role)
+    # FIXED: Correctly route to the right template based on the role
+    if role == "public":
+        return render_template("register.html", markets=markets, role=role)
+    elif role == "lgu":
+        return render_template("register_lgu.html", markets=markets, role=role)
+    else:
+        return render_template("register_form.html", markets=markets, role=role)
 
 
 # Alias so your old landing page links (`url_for('auth.register_continue')`) still work

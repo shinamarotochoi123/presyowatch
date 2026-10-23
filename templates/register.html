@@ -4,30 +4,59 @@
 {% block title %}Create Account — PresyoWatch{% endblock %}
 {% block content %}
 
+<style>
+  /* Highlight the card when hovering */
+  .role-option {
+    transition: all 0.2s ease-in-out;
+    border: 2px solid transparent;
+    border-radius: 12px;
+    margin-bottom: 12px;
+  }
+  .role-option:hover {
+    background-color: #f0fdf4; /* Light green tint */
+    border-color: #2E7D32; /* PresyoWatch Green */
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(46, 125, 50, 0.15);
+  }
+  
+  /* Highlight the card when the radio button is selected */
+  .role-option.selected {
+    background-color: #e8f5e9; /* Slightly darker green tint */
+    border-color: #2E7D32;
+    box-shadow: 0 4px 12px rgba(46, 125, 50, 0.2);
+  }
+  
+  .role-option input[type="radio"] {
+    accent-color: #2E7D32; /* Make the radio dot green */
+  }
+</style>
+
 <div class="auth-head">
   <div class="steps" aria-label="Step 1 of 2"><span class="on"></span><span></span></div>
   <h1 class="auth-title">Create your account</h1>
   <div class="auth-sub">First, tell us how you'll use PresyoWatch</div>
 </div>
 
-<form method="GET" action="{{ url_for('auth.register_continue') }}" class="pw-card white auth-card">
+<form method="GET" action="{{ url_for('auth.register_form', role='resident') }}" id="roleForm" class="pw-card white auth-card">
   {{ brand(56) }}
   
   <div class="field-label mt-2">I am a…</div>
   
-  <label class="role-option">
-    <input type="radio" name="role" value="resident" checked>
+  <!-- Resident Option -->
+  <label class="role-option" id="label-resident" onclick="selectRole('resident')">
+    <input type="radio" name="role" value="resident" checked onchange="document.getElementById('roleForm').action = '/register/resident';">
     <i class="fa-solid fa-user"></i>
     <div><b>Resident / Consumer</b><small>Report and track commodity prices</small></div>
   </label>
   
-  <label class="role-option">
-    <input type="radio" name="role" value="vendor">
+  <!-- Vendor Option -->
+  <label class="role-option" id="label-vendor" onclick="selectRole('vendor')">
+    <input type="radio" name="role" value="vendor" onchange="document.getElementById('roleForm').action = '/register/vendor';">
     <i class="fa-solid fa-store"></i>
     <div><b>Market Vendor</b><small>Manage your listings and get verified</small></div>
   </label>
   
-  <button class="btn-pw btn-block btn-submit" type="submit">
+  <button class="btn-pw btn-block btn-submit mt-3" type="submit">
     <span>Continue <i class="fa-solid fa-arrow-right"></i></span>
   </button>
 </form>
@@ -35,5 +64,22 @@
 <div class="auth-foot">
   Already have an account? <a href="{{ url_for('auth.login') }}">Log in</a>
 </div>
+
+<script>
+  function selectRole(role) {
+    // Remove 'selected' class from both
+    document.getElementById('label-resident').classList.remove('selected');
+    document.getElementById('label-vendor').classList.remove('selected');
+    
+    // Add 'selected' class to the clicked one
+    document.getElementById('label-' + role).classList.add('selected');
+  }
+
+  // Set initial state on page load
+  document.addEventListener('DOMContentLoaded', () => {
+    const checked = document.querySelector('input[name="role"]:checked').value;
+    document.getElementById('label-' + checked).classList.add('selected');
+  });
+</script>
 
 {% endblock %}
