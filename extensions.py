@@ -6,6 +6,8 @@ from config import Config
 
 login_manager = LoginManager()
 login_manager.login_view = "auth.login"
+# Admin pages send logged-out visitors to the admin login; LGU/DTI-DA pages to the staff portal.
+login_manager.blueprint_login_views = {"admin": "auth.admin_login", "lgu": "auth.staff_login"}
 login_manager.login_message_category = "warning"
 
 _client = None

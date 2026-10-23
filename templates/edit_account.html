@@ -1,11 +1,12 @@
 {% extends "base.html" %}
+{% from "_ui.html" import name_fields %}
 {% block title %}Edit Profile — PresyoWatch{% endblock %}
 {% block content %}
 {% set u = nav_current_user %}
 <h4 class="page-title">Edit Profile</h4>
 <form method="POST" class="pw-card">
-  <div class="field"><label class="form-label">{{ 'Owner name' if u.role == 'vendor' else 'Full name' }}</label>
-    <input class="input-pw" name="full_name" value="{{ u.full_name }}" required></div>
+  <label class="form-label">{{ 'Owner name' if u.role == 'vendor' else 'Name' }}</label>
+  {{ name_fields(u) }}
   <div class="field"><label class="form-label">Email</label>
     <input class="input-pw" type="email" name="email" value="{{ u.email }}" required></div>
   <div class="field"><label class="form-label">Contact number</label>

@@ -6,10 +6,14 @@ from flask import Blueprint, render_template, redirect, url_for, flash, request,
 from flask_login import login_required, current_user
 
 from models import User, PriceReport, Alert, Product, DtiSrp
+from routes.auth import CITIES
+from utils.helpers import log_action, read_name_fields
 
 bp = Blueprint("admin", __name__)
 
 ROLES = ("resident", "vendor", "lgu_staff", "dti_da", "admin")
+# Accounts an admin can create directly (residents and vendors self-register).
+STAFF_ROLES = ("lgu_staff", "dti_da", "admin")
 REPORT_STATUSES = ("pending", "verified", "rejected", "flagged")
 
 
@@ -20,6 +24,13 @@ def admin_required(f):
             abort(403)
         return f(*args, **kwargs)
     return wrapper
+
+
+@bp.route("/")
+@login_required
+@admin_required
+def index():
+    return redirect(url_for("admin.applications"))
 
 
 @bp.route("/dashboard")
@@ -53,6 +64,80 @@ def users():
     return render_template("admin_users.html", users=all_users)
 
 
+@bp.route("/users/create", methods=["POST"])
+@login_required
+@admin_required
+def create_user():
+    names, name_error = read_name_fields()
+    email = request.form.get("email", "").strip().lower()
+    role = request.form.get("role")
+    city = request.form.get("city") or None
+
+    if name_error or not email:
+        flash(name_error or "Email is required.", "danger")
+        return redirect(url_for("admin.users"))
+    if role not in STAFF_ROLES:
+        abort(400)
+    if city is not None and city not in CITIES:
+        abort(400)
+    if User.first(email=email):
+        flash("An account with that email already exists.", "danger")
+        return redirect(url_for("admin.users"))
+
+    user = User(
+        **names,
+        email=email,
+        role=role,
+        city=city,
+        subscription_status="active",
+        is_active_flag=True,
+        application_status="approved",
+        org_name=request.form.get("org_name", "").strip() or None,
+        division=request.form.get("division", "").strip() or None,
+    )
+    temp = secrets.token_urlsafe(8)
+    user.set_password(temp)
+    user.save()
+    log_action(current_user, "create_user", f"Created {role} account for {email}")
+    flash(f"Account created for {names['full_name']} ({email}). Temporary password: {temp} — share it securely and ask them to change it.", "warning")
+    return redirect(url_for("admin.users"))
+
+
+@bp.route("/users/<int:user_id>/role", methods=["POST"])
+@login_required
+@admin_required
+def change_role(user_id):
+    new_role = request.form.get("role")
+    if new_role not in ROLES:
+        abort(400)
+    user = User.get_or_404(user_id)
+    if user.user_id == current_user.user_id:
+        flash("You cannot change your own role.", "danger")
+        return redirect(url_for("admin.users"))
+    old_role = user.role
+    user.role = new_role
+    user.save()
+    log_action(current_user, "change_role", f"{user.email}: {old_role} -> {new_role}")
+    flash(f"{user.full_name} is now {new_role.replace('_', ' ').title()}.", "success")
+    return redirect(url_for("admin.users"))
+
+
+def _is_pending_application(user):
+    # Older sign-ups have no application_status; an inactive staff account without one is still pending.
+    return user.role in ("lgu_staff", "dti_da") and not user.is_active_flag and         user.application_status in ("pending", None)
+
+
+@bp.route("/applications")
+@login_required
+@admin_required
+def applications():
+    staff = [u for u in User.all() if u.role in ("lgu_staff", "dti_da")]
+    pending = sorted((u for u in staff if _is_pending_application(u)), key=lambda u: u.created_at)
+    rejected = sorted((u for u in staff if u.application_status == "rejected"),
+                      key=lambda u: u.created_at, reverse=True)
+    return render_template("admin_applications.html", pending=pending, rejected=rejected)
+
+
 @bp.route("/users/<int:user_id>/approve", methods=["POST"])
 @login_required
 @admin_required
@@ -60,9 +145,27 @@ def approve_user(user_id):
     user = User.get_or_404(user_id)
     user.is_active_flag = True
     user.subscription_status = "active"
+    if user.role in ("lgu_staff", "dti_da"):
+        user.application_status = "approved"
     user.save()
+    log_action(current_user, "approve_user", f"Approved {user.role} account {user.email}")
     flash(f"{user.full_name}'s account has been approved.", "success")
-    return redirect(url_for("admin.users"))
+    return redirect(url_for("admin.applications" if request.form.get("back") == "applications" else "admin.users"))
+
+
+@bp.route("/users/<int:user_id>/reject", methods=["POST"])
+@login_required
+@admin_required
+def reject_user(user_id):
+    user = User.get_or_404(user_id)
+    if user.role not in ("lgu_staff", "dti_da"):
+        abort(400)
+    user.is_active_flag = False
+    user.application_status = "rejected"
+    user.save()
+    log_action(current_user, "reject_user", f"Rejected {user.role} application from {user.email}")
+    flash(f"{user.full_name}'s application has been rejected.", "info")
+    return redirect(url_for("admin.applications"))
 
 
 @bp.route("/users/<int:user_id>/toggle-active", methods=["POST"])

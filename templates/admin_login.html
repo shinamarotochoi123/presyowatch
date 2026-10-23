@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% from "_ui.html" import brand, fl %}
+{% set hide_nav = true %}
+{% block title %}Admin Login — PresyoWatch{% endblock %}
+{% block content %}
+<div class="auth-head">
+  <div class="auth-badge dark"><i class="fa-solid fa-user-shield"></i> Administrator</div>
+  <h1 class="auth-title">Admin login</h1>
+  <div class="auth-sub">PresyoWatch administrators only</div>
+</div>
+
+<form method="POST" class="pw-card white auth-card" data-modern-form>
+  {{ brand(56) }}
+  {{ fl('email', 'Admin email', 'envelope', type='email', required=true, autocomplete='username') }}
+  {{ fl('password', 'Password', 'lock', type='password', required=true, autocomplete='current-password') }}
+  <button class="btn-pw btn-block btn-submit" type="submit"><span>Log in as admin</span></button>
+</form>
+{% endblock %}

@@ -6,7 +6,7 @@
 <div class="pw-card text-center position-relative mt-3">
   <a class="edit-btn" href="{{ url_for('auth.edit_account') }}"><i class="fa-regular fa-pen-to-square"></i></a>
   {{ avatar(u.business_name or u.full_name) }}
-  <h5 style="color:#0f6b33;font-weight:800">{{ u.business_name or u.full_name }}</h5>
+  <h5 style="font-weight:800">{{ u.business_name or u.full_name }}</h5>
   {% if u.is_verified_vendor %}{{ verified() }}{% else %}<span class="pill pending">Verification pending</span>{% endif %}
   <div class="small text-muted mt-3">{{ market.market_name if market else '' }}{% if u.business_address %}, {{ u.business_address }}{% endif %} · {{ u.city }}</div>
 </div>

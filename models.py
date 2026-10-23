@@ -136,7 +136,10 @@ class User(UserMixin, Model):
     collection = "users"
     id_field = "user_id"
     defaults = {
-        "full_name": None,
+        "full_name": None,               # "First Middle Last", kept for display
+        "first_name": None,
+        "middle_name": None,             # "N/A" when the person has no middle name
+        "last_name": None,
         "email": None,
         "password_hash": None,
         "role": "resident",             # resident | vendor | lgu_staff | dti_da | admin
@@ -156,6 +159,7 @@ class User(UserMixin, Model):
         "division": None,
         "contact_person": None,
         "profile_pic": None,             # NEW — path to profile picture
+        "application_status": None,      # pending | approved | rejected (LGU / DTI-DA sign-ups only)
     }
 
     # Flask-Login requires get_id(); primary key column name differs from "id"

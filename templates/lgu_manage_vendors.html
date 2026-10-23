@@ -30,7 +30,7 @@
       <form method="POST" action="{{ url_for('lgu.reactivate_vendor', vendor_id=v.user_id) }}"><button class="btn-soft btn-sm-pw">Reactivate</button></form>
     {% else %}
       {% if not v.is_verified_vendor %}<form method="POST" action="{{ url_for('lgu.approve_vendor', vendor_id=v.user_id) }}"><button class="btn-soft btn-sm-pw">Approve Badge</button></form>{% endif %}
-      <form method="POST" action="{{ url_for('lgu.suspend_vendor', vendor_id=v.user_id) }}" onsubmit="return confirm('Suspend this vendor? They will not be able to log in.')"><button class="btn-danger-soft btn-sm-pw" style="background:#d96a63">Suspend</button></form>
+      <form method="POST" action="{{ url_for('lgu.suspend_vendor', vendor_id=v.user_id) }}" onsubmit="return confirm('Suspend this vendor? They will not be able to log in.')"><button class="btn-danger-soft btn-sm-pw">Suspend</button></form>
     {% endif %}
     <a class="btn-blue btn-soft btn-sm-pw" href="{{ url_for('public.vendor_page', vendor_id=v.user_id) }}">View</a>
   </div>

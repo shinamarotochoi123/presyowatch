@@ -3,13 +3,11 @@
 {% block title %}LGU Home — PresyoWatch{% endblock %}
 {% block content %}
 {% set u = nav_current_user %}
-<div class="pw-card mt-3 position-relative">
-  <span class="pill" style="position:absolute;right:16px;top:14px;background:#e0d55e">{{ plan.name|upper }}</span>
-  <div class="ms-2 mb-3">
-    <div>Welcome Back,</div>
-    <h4 style="color:#0f6b33;margin:0;font-weight:800">{{ u.org_name or u.full_name }} 🏛️</h4>
-    <div class="small text-secondary">{{ u.division or ('Cebu City' if not u.city else u.city) }}</div>
-  </div>
+<div class="pw-card hero-card mt-2">
+  <span class="pill">{{ plan.name|upper }}</span>
+  <div class="eyebrow">Welcome back,</div>
+  <h4>{{ u.org_name or u.full_name }}</h4>
+  <div class="sub"><i class="fa-solid fa-landmark"></i> {{ u.division or ('Cebu City' if not u.city else u.city) }}</div>
   <div class="stat-row c4">
     {{ stat(pending_count, 'Pending') }}
     {{ stat(alert_count, 'Alerts') }}

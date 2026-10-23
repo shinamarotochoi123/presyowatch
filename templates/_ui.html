@@ -35,3 +35,78 @@
   </label>
 </div>
 {% endmacro %}
+
+{# ---- modern form fields (auth pages) ---------------------------------- #}
+{# Floating-label input with a leading icon. Password inputs get a show/hide button. #}
+{% macro fl(name, label, icon, type='text', required=false, value='', autocomplete='', attrs='') %}
+<div class="fl-field">
+  <i class="fa-solid fa-{{ icon }} fl-icon" aria-hidden="true"></i>
+  <input class="fl-input" id="f-{{ name }}" name="{{ name }}" type="{{ type }}" placeholder=" " value="{{ value or '' }}"
+         {{ 'required' if required }} {% if autocomplete %}autocomplete="{{ autocomplete }}"{% endif %} {{ attrs|safe }}>
+  <label for="f-{{ name }}">{{ label }}{% if not required %} <span class="fl-opt">optional</span>{% endif %}</label>
+  {% if type == 'password' %}
+  <button type="button" class="fl-eye" data-toggle-password aria-label="Show password"><i class="fa-regular fa-eye"></i></button>
+  {% endif %}
+</div>
+{% endmacro %}
+
+{# options: list of (value, text) #}
+{% macro fl_select(name, label, icon, options, required=false, selected='') %}
+<div class="fl-field">
+  <i class="fa-solid fa-{{ icon }} fl-icon" aria-hidden="true"></i>
+  <select class="fl-input" id="f-{{ name }}" name="{{ name }}" {{ 'required' if required }}>
+    <option value="" {{ 'selected' if not selected }} disabled hidden></option>
+    {% for value, text in options %}<option value="{{ value }}" {{ 'selected' if value|string == selected|string }}>{{ text }}</option>{% endfor %}
+  </select>
+  <label for="f-{{ name }}">{{ label }}{% if not required %} <span class="fl-opt">optional</span>{% endif %}</label>
+</div>
+{% endmacro %}
+
+{# Segmented single choice. options: list of (value, text, icon) #}
+{% macro segmented(name, options, checked) %}
+<div class="seg" role="radiogroup">
+  {% for value, text, icon in options %}
+  <label class="seg-opt">
+    <input type="radio" name="{{ name }}" value="{{ value }}" {{ 'checked' if value == checked }}>
+    <span><i class="fa-solid fa-{{ icon }}"></i> {{ text }}</span>
+  </label>
+  {% endfor %}
+</div>
+{% endmacro %}
+
+{% macro section(n, title) %}
+<div class="form-section"><span class="num">{{ n }}</span>{{ title }}</div>
+{% endmacro %}
+
+{# First / middle / last name inputs. Ticking N/A disables the middle name field.
+   compact=true renders plain Bootstrap inputs (admin console). #}
+{% macro name_fields(user=none, owner=false, compact=false) %}
+{% set first, middle, last = split_full_name(user) %}
+{% set na = user is not none and user.middle_name == 'N/A' %}
+{% set na_js = "var m=this.form.elements['middle_name'];m.disabled=this.checked;m.required=!this.checked;if(this.checked)m.value='';" %}
+{% if compact %}
+<div class="col-md-3"><input class="form-control" name="first_name" value="{{ first }}" placeholder="First Name" required></div>
+<div class="col-md-3">
+  <div class="input-group">
+    <input class="form-control" name="middle_name" value="{{ '' if na else middle }}" placeholder="Middle Name" {{ 'disabled' if na else 'required' }}>
+    <label class="input-group-text gap-1" style="cursor:pointer"><input type="checkbox" class="form-check-input mt-0" name="middle_na" value="1" {{ 'checked' if na }} onchange="{{ na_js }}"> N/A</label>
+  </div>
+</div>
+<div class="col-md-3"><input class="form-control" name="last_name" value="{{ last }}" placeholder="Last Name" required></div>
+{% else %}
+<div class="fl-row">
+  {{ fl('first_name', ('Owner first name' if owner else 'First name'), 'user', required=true, value=first, autocomplete='given-name') }}
+  {{ fl('last_name', 'Last name', 'user', required=true, value=last, autocomplete='family-name') }}
+</div>
+<div class="fl-field has-chip">
+  <i class="fa-solid fa-user fl-icon" aria-hidden="true"></i>
+  <input class="fl-input" id="f-middle_name" name="middle_name" placeholder=" " value="{{ '' if na else middle }}"
+         autocomplete="additional-name" {{ 'disabled' if na else 'required' }}>
+  <label for="f-middle_name">Middle name</label>
+  <label class="na-chip" title="Tick if you have no middle name">
+    <input type="checkbox" name="middle_na" value="1" {{ 'checked' if na }} onchange="{{ na_js }}">
+    <i class="fa-solid fa-check"></i> N/A
+  </label>
+</div>
+{% endif %}
+{% endmacro %}

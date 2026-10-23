@@ -3,13 +3,11 @@
 {% block title %}Home — PresyoWatch{% endblock %}
 {% block content %}
 {% set u = nav_current_user %}
-<div class="pw-card mt-3">
-  <div class="ms-2 mb-3">
-    <div>Welcome back,</div>
-    <h4 style="color:#0f6b33;margin:0">{{ u.business_name or u.full_name }}</h4>
-    <div class="small text-secondary">{{ market.market_name if market else '' }}{% if u.business_address %} · {{ u.business_address }}{% endif %}</div>
-    <div class="mt-2">{% if u.is_verified_vendor %}{{ verified() }}{% elif u.vendor_status == 'pending' %}<span class="pill pending">Verification pending</span>{% endif %}</div>
-  </div>
+<div class="pw-card hero-card mt-2">
+  <div class="eyebrow">Welcome back,</div>
+  <h4>{{ u.business_name or u.full_name }}</h4>
+  <div class="sub"><i class="fa-solid fa-store"></i> {{ market.market_name if market else '' }}{% if u.business_address %} · {{ u.business_address }}{% endif %}
+    {% if u.is_verified_vendor %}<span class="ms-1">{{ verified() }}</span>{% elif u.vendor_status == 'pending' %}<span class="pill pending ms-1">Verification pending</span>{% endif %}</div>
   <div class="stat-row c3">
     {{ stat(listings|length, 'Listings') }}
     {{ stat(stats.rating if stats.rating is not none else '—', 'Rating') }}

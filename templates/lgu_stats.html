@@ -67,7 +67,7 @@
 </div>
 
 <div class="pw-card dark">
-  <h5 class="card-title" style="color:#2b4a2c">Vendor Badge Status</h5>
+  <h5 class="card-title">Vendor Badge Status</h5>
   <div class="stat-row c3 mb-3">
     <div class="stat-tile"><div class="n">{{ badge.verified }}</div><div class="l">Verified</div></div>
     <div class="stat-tile"><div class="n">{{ badge.pending }}</div><div class="l">Pending</div></div>
@@ -75,7 +75,7 @@
   </div>
   <div class="stacked mb-2"><span style="width:{{ badge_pct.verified }}%"></span><span style="width:{{ badge_pct.pending }}%"></span><span style="width:{{ badge_pct.unverified }}%"></span></div>
   <div class="d-flex justify-content-around small">
-    <span><i class="dot" style="background:#1d4e7c"></i>Verified</span><span><i class="dot" style="background:#e0d55e"></i>Pending</span><span><i class="dot" style="background:#c7ccc2"></i>Unverified</span>
+    <span><i class="dot" style="background:var(--primary)"></i>Verified</span><span><i class="dot" style="background:var(--accent)"></i>Pending</span><span><i class="dot" style="background:#c7ccc2"></i>Unverified</span>
   </div>
 </div>
 
@@ -87,7 +87,7 @@
       <div>Reports within fair price <b>{{ compliance.fair }}%</b></div>
       <div class="progress-pw mb-2"><span style="width:{{ compliance.fair }}%;background:#1e9e5a"></span></div>
       <div>Minor deviations (5–{{ '%g'|format(threshold) }}%) <b>{{ compliance.minor }}%</b></div>
-      <div class="progress-pw mb-2"><span style="width:{{ compliance.minor }}%;background:#e0d55e"></span></div>
+      <div class="progress-pw mb-2"><span style="width:{{ compliance.minor }}%;background:var(--accent)"></span></div>
       <div>Major spikes (&gt;{{ '%g'|format(threshold) }}%) <b>{{ compliance.major }}%</b></div>
       <div class="progress-pw"><span style="width:{{ compliance.major }}%;background:#e5534b"></span></div>
     </div>
